@@ -1,0 +1,185 @@
+﻿@model ERPBilling.Models.Invoice
+@{
+    ViewData["Title"] = "Invoice " + Model.InvoiceNumber;
+    var amountPaid = (decimal)ViewBag.AmountPaid;
+    var balanceDue = (decimal)ViewBag.BalanceDue;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0">
+        <i class="bi bi-file-earmark-text me-2 text-primary"></i>@Model.InvoiceNumber
+    </h5>
+    <div class="d-flex gap-2">
+        @if (Model.Status != ERPBilling.Models.InvoiceStatus.Paid)
+        {
+            <a asp-controller="Payment" asp-action="Create"
+               asp-route-invoiceId="@Model.Id"
+               class="btn btn-success btn-sm">
+                <i class="bi bi-cash me-1"></i>Record Payment
+            </a>
+        }
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Back
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Left: Invoice header info -->
+    <div class="col-md-8 mb-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+
+                <!-- Invoice Meta -->
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <p class="text-muted small mb-1">Billed To</p>
+                        <h6 class="mb-0">@Model.Customer?.Name</h6>
+                        <small class="text-muted">@Model.Customer?.Email</small><br />
+                        <small class="text-muted">@Model.Customer?.Phone</small>
+                        @if (!string.IsNullOrEmpty(Model.Customer?.GSTNumber))
+                        {
+                            <br />
+
+                            <small class="text-muted">GST: <code>@Model.Customer.GSTNumber</code></small>
+                        }
+                    </div>
+                    <div class="col-6 text-end">
+                        <p class="text-muted small mb-1">Invoice Details</p>
+                        <p class="mb-1 small"><strong>Invoice #:</strong> @Model.InvoiceNumber</p>
+                        <p class="mb-1 small"><strong>Date:</strong> @Model.InvoiceDate.ToString("dd MMM yyyy")</p>
+                        <p class="mb-1 small"><strong>Due:</strong> @Model.DueDate.ToString("dd MMM yyyy")</p>
+                        <p class="mb-0">
+                            @{
+                                var cls = Model.Status switch
+                                {
+                                    ERPBilling.Models.InvoiceStatus.Paid => "badge-paid",
+                                    ERPBilling.Models.InvoiceStatus.Unpaid => "badge-unpaid",
+                                    _ => "badge-partial"
+                                };
+                            }
+                            <span class="badge @cls fs-6">@Model.Status</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Line Items Table -->
+                <table class="table table-bordered table-sm align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Product / Service</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Unit Price</th>
+                            <th class="text-end">Tax</th>
+                            <th class="text-end">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int sno = 1;
+                        }
+                        @foreach (var item in Model.InvoiceItems)
+                        {
+                            <tr>
+                                <td>@sno++</td>
+                                <td class="fw-semibold">@item.Product?.Name</td>
+                                <td class="text-center">@item.Quantity</td>
+                                <td class="text-end">₹@item.UnitPrice.ToString("N2")</td>
+                                <td class="text-end text-warning">₹@item.TaxAmount.ToString("N2")</td>
+                                <td class="text-end fw-semibold">₹@item.LineTotal.ToString("N2")</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="5" class="text-end fw-semibold">Subtotal</td>
+                            <td class="text-end">₹@((Model.TotalAmount - Model.InvoiceItems.Sum(i => i.TaxAmount)).ToString("N2"))</td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-end fw-semibold text-warning">Total Tax</td>
+                            <td class="text-end text-warning">₹@Model.InvoiceItems.Sum(i => i.TaxAmount).ToString("N2")</td>
+                        </tr>
+                        <tr>
+                            <td colspan="5" class="text-end fw-bold fs-6">Grand Total</td>
+                            <td class="text-end fw-bold fs-6 text-primary">₹@Model.TotalAmount.ToString("N2")</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right: Payment summary + history -->
+    <div class="col-md-4 mb-3">
+
+        <!-- Payment Summary Card -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-header bg-white border-0 pt-3">
+                <h6 class="mb-0"><i class="bi bi-wallet2 me-2 text-primary"></i>Payment Summary</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted">Invoice Total</td>
+                        <td class="text-end fw-semibold">₹@Model.TotalAmount.ToString("N2")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Amount Paid</td>
+                        <td class="text-end text-success fw-semibold">₹@amountPaid.ToString("N2")</td>
+                    </tr>
+                    <tr class="border-top">
+                        <td class="fw-bold">Balance Due</td>
+                        <td class="text-end fw-bold @(balanceDue > 0 ? "text-danger" : "text-success")">
+                            ₹@balanceDue.ToString("N2")
+                        </td>
+                    </tr>
+                </table>
+
+                @if (Model.Status != ERPBilling.Models.InvoiceStatus.Paid)
+                {
+                    <div class="d-grid mt-3">
+                        <a asp-controller="Payment" asp-action="Create"
+                           asp-route-invoiceId="@Model.Id"
+                           class="btn btn-success btn-sm">
+                            <i class="bi bi-cash me-1"></i>Record Payment
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Payment History -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h6 class="mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Payment History</h6>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.Payments.Any())
+                {
+                    @foreach (var pay in Model.Payments.OrderByDescending(p => p.PaymentDate))
+                    {
+                        <div class="px-3 py-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold text-success small">₹@pay.AmountPaid.ToString("N2")</span>
+                                <span class="badge" style="background:#e0f0ff;color:#0c447c;font-size:11px">@pay.PaymentMode</span>
+                            </div>
+                            <small class="text-muted">@pay.PaymentDate.ToString("dd MMM yyyy")</small>
+                            @if (!string.IsNullOrEmpty(pay.Notes))
+                            {
+                                <br />
+
+                                <small class="text-muted fst-italic">@pay.Notes</small>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-center text-muted small py-3">No payments recorded yet.</p>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>

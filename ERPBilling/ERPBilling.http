@@ -1,0 +1,6 @@
+@ERPBilling_HostAddress = http://localhost:5208
+
+GET {{ERPBilling_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

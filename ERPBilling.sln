@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34616.47
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ERPBilling", "ERPBilling\ERPBilling.csproj", "{227C37B3-29F7-4E92-988F-7E3859A8A88E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{227C37B3-29F7-4E92-988F-7E3859A8A88E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{227C37B3-29F7-4E92-988F-7E3859A8A88E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{227C37B3-29F7-4E92-988F-7E3859A8A88E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{227C37B3-29F7-4E92-988F-7E3859A8A88E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F013AFD1-085E-41BE-A1EC-7600BDA598DC}
+	EndGlobalSection
+EndGlobal

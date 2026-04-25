@@ -1,0 +1,239 @@
+﻿@model ERPBilling.Models.InvoiceViewModel
+@{
+    ViewData["Title"] = "New Invoice";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-plus me-2 text-primary"></i>
+                    Create Invoice — <span class="text-primary">@Model.InvoiceNumber</span>
+                </h5>
+            </div>
+            <div class="card-body">
+
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
+
+                <form asp-action="Create" method="post" id="invoiceForm">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Hidden field for invoice number -->
+                    <input type="hidden" asp-for="InvoiceNumber" />
+
+                    <!-- ── Invoice Header ───────────────────── -->
+                    <div class="row mb-4">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="CustomerId" class="form-label fw-semibold"></label>
+                            <select asp-for="CustomerId" asp-items="ViewBag.Customers"
+                                    class="form-select">
+                                <option value="">— Select Customer —</option>
+                            </select>
+                            <span asp-validation-for="CustomerId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="InvoiceDate" class="form-label fw-semibold"></label>
+                            <input asp-for="InvoiceDate" type="date" class="form-control" />
+                            <span asp-validation-for="InvoiceDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="DueDate" class="form-label fw-semibold"></label>
+                            <input asp-for="DueDate" type="date" class="form-control" />
+                            <span asp-validation-for="DueDate" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- ── Line Items ───────────────────────── -->
+                    <h6 class="mb-3 fw-semibold border-bottom pb-2">
+                        <i class="bi bi-list-ul me-1"></i>Line Items
+                    </h6>
+
+                    <div class="table-responsive mb-3">
+                        <table class="table table-bordered align-middle" id="lineItemsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:35%">Product / Service</th>
+                                    <th style="width:10%">Qty</th>
+                                    <th style="width:15%">Unit Price (₹)</th>
+                                    <th style="width:10%">Tax %</th>
+                                    <th style="width:12%">Tax Amt (₹)</th>
+                                    <th style="width:13%">Line Total (₹)</th>
+                                    <th style="width:5%"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="lineItemsBody">
+                                <!-- Rows added dynamically by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm mb-4"
+                            onclick="addLineItem()">
+                        <i class="bi bi-plus-circle me-1"></i>Add Line Item
+                    </button>
+
+                    <!-- ── Totals Summary ───────────────────── -->
+                    <div class="row justify-content-end">
+                        <div class="col-md-4">
+                            <table class="table table-sm table-borderless">
+                                <tr>
+                                    <td class="text-muted">Subtotal</td>
+                                    <td class="text-end fw-semibold" id="subtotalDisplay">₹0.00</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Total Tax</td>
+                                    <td class="text-end fw-semibold text-warning" id="taxDisplay">₹0.00</td>
+                                </tr>
+                                <tr class="border-top">
+                                    <td class="fw-bold fs-6">Grand Total</td>
+                                    <td class="text-end fw-bold fs-6 text-primary" id="grandTotalDisplay">₹0.00</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Hidden inputs to POST totals -->
+                    <input type="hidden" name="Subtotal" id="subtotalInput" />
+                    <input type="hidden" name="TotalTax" id="taxInput" />
+                    <input type="hidden" name="GrandTotal" id="grandTotalInput" />
+
+                    <div class="d-flex gap-2 mt-2">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">
+                            <i class="bi bi-save me-1"></i>Create Invoice
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        // Product data passed from controller via ViewBag
+        var products = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.Products));
+        var rowIndex = 0;
+
+        // Build product <option> HTML string
+        function buildProductOptions(selectedId) {
+            var opts = '<option value="">— Select Product —</option>';
+            products.forEach(function (p) {
+                var sel = (p.Id == selectedId) ? 'selected' : '';
+                opts += '<option value="' + p.Id + '" ' + sel +
+                    ' data-price="' + p.UnitPrice + '"' +
+                    ' data-tax="' + p.TaxPercent + '">' +
+                    p.Name + ' (₹' + parseFloat(p.UnitPrice).toFixed(2) + ')' +
+                    '</option>';
+            });
+            return opts;
+        }
+
+        // Add a new empty line item row
+        function addLineItem() {
+            var i = rowIndex++;
+            var row = '<tr id="row_' + i + '">' +
+                '<td>' +
+                '<select name="Items[' + i + '].ProductId" class="form-select form-select-sm product-select" ' +
+                'onchange="onProductChange(this,' + i + ')" required>' +
+                buildProductOptions(null) +
+                '</select>' +
+                '</td>' +
+                '<td>' +
+                '<input type="number" name="Items[' + i + '].Quantity" ' +
+                'class="form-control form-control-sm qty-input" ' +
+                'value="1" min="1" onchange="recalcRow(' + i + ')" required />' +
+                '</td>' +
+                '<td>' +
+                '<input type="number" name="Items[' + i + '].UnitPrice" ' +
+                'id="price_' + i + '" class="form-control form-control-sm" ' +
+                'step="0.01" min="0" onchange="recalcRow(' + i + ')" readonly />' +
+                '</td>' +
+                '<td>' +
+                '<input type="number" name="Items[' + i + '].TaxPercent" ' +
+                'id="tax_' + i + '" class="form-control form-control-sm" readonly />' +
+                '</td>' +
+                '<td>' +
+                '<input type="number" name="Items[' + i + '].TaxAmount" ' +
+                'id="taxAmt_' + i + '" class="form-control form-control-sm bg-light" readonly />' +
+                '</td>' +
+                '<td>' +
+                '<input type="number" name="Items[' + i + '].LineTotal" ' +
+                'id="lineTotal_' + i + '" class="form-control form-control-sm bg-light fw-semibold" readonly />' +
+                '</td>' +
+                '<td class="text-center">' +
+                '<button type="button" class="btn btn-sm btn-outline-danger" ' +
+                'onclick="removeRow(' + i + ')">' +
+                '<i class="bi bi-trash"></i>' +
+                '</button>' +
+                '</td>' +
+                '</tr>';
+            document.getElementById('lineItemsBody').insertAdjacentHTML('beforeend', row);
+        }
+
+        // When product dropdown changes — auto-fill price & tax
+        function onProductChange(select, i) {
+            var opt = select.options[select.selectedIndex];
+            var price = parseFloat(opt.getAttribute('data-price')) || 0;
+            var tax = parseFloat(opt.getAttribute('data-tax')) || 0;
+            document.getElementById('price_' + i).value = price.toFixed(2);
+            document.getElementById('tax_' + i).value = tax.toFixed(2);
+            recalcRow(i);
+        }
+
+        // Recalculate a single row's tax amount and line total
+        function recalcRow(i) {
+            var price = parseFloat(document.getElementById('price_' + i).value) || 0;
+            var tax = parseFloat(document.getElementById('tax_' + i).value) || 0;
+            var qtyEl = document.querySelector('[name="Items[' + i + '].Quantity"]');
+            var qty = parseInt(qtyEl ? qtyEl.value : 1) || 1;
+            var subtotal = price * qty;
+            var taxAmt = parseFloat((subtotal * tax / 100).toFixed(2));
+            var total = parseFloat((subtotal + taxAmt).toFixed(2));
+            document.getElementById('taxAmt_' + i).value = taxAmt.toFixed(2);
+            document.getElementById('lineTotal_' + i).value = total.toFixed(2);
+            recalcTotals();
+        }
+
+        // Recalculate grand total across all rows
+        function recalcTotals() {
+            var subtotal = 0, totalTax = 0;
+            document.querySelectorAll('[id^="lineTotal_"]').forEach(function (el) {
+                subtotal += parseFloat(el.value) || 0;
+            });
+            document.querySelectorAll('[id^="taxAmt_"]').forEach(function (el) {
+                totalTax += parseFloat(el.value) || 0;
+            });
+            var rawSubtotal = subtotal - totalTax;
+            document.getElementById('subtotalDisplay').textContent = '₹' + rawSubtotal.toFixed(2);
+            document.getElementById('taxDisplay').textContent = '₹' + totalTax.toFixed(2);
+            document.getElementById('grandTotalDisplay').textContent = '₹' + subtotal.toFixed(2);
+            // Sync hidden inputs for form POST
+            document.getElementById('subtotalInput').value = rawSubtotal.toFixed(2);
+            document.getElementById('taxInput').value = totalTax.toFixed(2);
+            document.getElementById('grandTotalInput').value = subtotal.toFixed(2);
+        }
+
+        // Remove a row
+        function removeRow(i) {
+            var row = document.getElementById('row_' + i);
+            if (row) row.remove();
+            recalcTotals();
+        }
+
+        // Validate at least one line item before submit
+        document.getElementById('invoiceForm').addEventListener('submit', function (e) {
+            var rows = document.getElementById('lineItemsBody').querySelectorAll('tr');
+            if (rows.length === 0) {
+                e.preventDefault();
+                alert('Please add at least one line item before saving.');
+            }
+        });
+
+        // Add one empty row on page load
+        addLineItem();
+    </script>
+}

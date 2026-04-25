@@ -1,0 +1,118 @@
+﻿@model ERPBilling.Models.Payment
+@{
+    ViewData["Title"] = "Record Payment";
+    var invoice = (ERPBilling.Models.Invoice)ViewBag.Invoice;
+    var totalPaid = (decimal)ViewBag.TotalPaid;
+    var balanceDue = (decimal)ViewBag.BalanceDue;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+
+        <!-- Invoice Summary -->
+        <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="mb-0">@invoice.InvoiceNumber</h6>
+                        <small class="text-muted">@invoice.Customer?.Name</small>
+                    </div>
+                    @{
+                        var cls = invoice.Status switch
+                        {
+                            ERPBilling.Models.InvoiceStatus.Paid => "badge-paid",
+                            ERPBilling.Models.InvoiceStatus.Unpaid => "badge-unpaid",
+                            _ => "badge-partial"
+                        };
+                    }
+                    <span class="badge @cls">@invoice.Status</span>
+                </div>
+                <div class="row text-center mt-3">
+                    <div class="col-4">
+                        <p class="text-muted small mb-0">Invoice Total</p>
+                        <h6>₹@invoice.TotalAmount.ToString("N2")</h6>
+                    </div>
+                    <div class="col-4">
+                        <p class="text-muted small mb-0">Already Paid</p>
+                        <h6 class="text-success">₹@totalPaid.ToString("N2")</h6>
+                    </div>
+                    <div class="col-4">
+                        <p class="text-muted small mb-0">Balance Due</p>
+                        <h6 class="text-danger">₹@balanceDue.ToString("N2")</h6>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Form -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-cash-coin me-2 text-success"></i>Record Payment
+                </h5>
+            </div>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
+
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="InvoiceId" />
+
+                    <div class="mb-3">
+                        <label asp-for="AmountPaid" class="form-label fw-semibold"></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input asp-for="AmountPaid" class="form-control"
+                                   step="0.01" min="0.01"
+                                   max="@balanceDue.ToString("F2")"
+                                   placeholder="Enter amount received" />
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span asp-validation-for="AmountPaid" class="text-danger small"></span>
+                            <button type="button" class="btn btn-link btn-sm p-0 text-primary"
+                                    onclick="document.getElementById('AmountPaid').value='@balanceDue.ToString("F2")'">
+                                Pay full balance
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PaymentDate" class="form-label fw-semibold"></label>
+                        <input asp-for="PaymentDate" type="date" class="form-control" />
+                        <span asp-validation-for="PaymentDate" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PaymentMode" class="form-label fw-semibold"></label>
+                        <select asp-for="PaymentMode" class="form-select"
+                                asp-items="Html.GetEnumSelectList<ERPBilling.Models.PaymentMode>()">
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Notes" class="form-label fw-semibold">
+                            Notes <span class="text-muted fw-normal">(optional)</span>
+                        </label>
+                        <textarea asp-for="Notes" class="form-control" rows="2"
+                                  placeholder="e.g. Cheque no. 123456, Reference ID, etc."></textarea>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-1"></i>Save Payment
+                        </button>
+                        <a asp-controller="Invoice" asp-action="Details"
+                           asp-route-id="@invoice.Id"
+                           class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+}

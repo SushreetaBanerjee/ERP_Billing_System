@@ -1,0 +1,91 @@
+﻿@model ERPBilling.Models.Product
+@{
+    ViewData["Title"] = "Add Product";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h5 class="mb-0">
+                    <i class="bi bi-plus-circle me-2 text-primary"></i>Add Product / Service
+                </h5>
+            </div>
+            <div class="card-body">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger small"></div>
+
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label fw-semibold"></label>
+                        <input asp-for="Name" class="form-control" placeholder="e.g. Web Design Service" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Category" class="form-label fw-semibold">
+                            Category <span class="text-muted fw-normal">(optional)</span>
+                        </label>
+                        <input asp-for="Category" class="form-control"
+                               placeholder="e.g. Service, Hardware, Furniture" />
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="UnitPrice" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input asp-for="UnitPrice" class="form-control"
+                                       placeholder="0.00" step="0.01" min="0" />
+                            </div>
+                            <span asp-validation-for="UnitPrice" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="TaxPercent" class="form-label fw-semibold"></label>
+                            <div class="input-group">
+                                <input asp-for="TaxPercent" class="form-control"
+                                       placeholder="0" step="0.01" min="0" max="100" />
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <span asp-validation-for="TaxPercent" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Live preview of price + tax -->
+                    <div class="alert alert-info py-2 small" id="pricePreview" style="display:none">
+                        Price after tax: <strong id="totalPrice">₹0.00</strong>
+                    </div>
+
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i>Save Product
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <script>
+        // Live price + tax preview
+        function updatePreview() {
+            var price = parseFloat(document.getElementById('UnitPrice').value) || 0;
+            var tax = parseFloat(document.getElementById('TaxPercent').value) || 0;
+            if (price > 0) {
+                var total = price + (price * tax / 100);
+                document.getElementById('totalPrice').textContent = '₹' + total.toFixed(2);
+                document.getElementById('pricePreview').style.display = 'block';
+            } else {
+                document.getElementById('pricePreview').style.display = 'none';
+            }
+        }
+        document.getElementById('UnitPrice').addEventListener('input', updatePreview);
+        document.getElementById('TaxPercent').addEventListener('input', updatePreview);
+    </script>
+}

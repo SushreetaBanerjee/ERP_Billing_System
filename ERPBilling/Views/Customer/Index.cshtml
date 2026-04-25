@@ -1,0 +1,55 @@
+﻿@model IEnumerable<ERPBilling.Models.Customer>
+@{
+    ViewData["Title"] = "Customers";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>Customer List</h5>
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="bi bi-plus-circle me-1"></i>Add Customer
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>GST Number</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td>@c.Id</td>
+                        <td class="fw-semibold">@c.Name</td>
+                        <td>@c.Email</td>
+                        <td>@c.Phone</td>
+                        <td><code>@(c.GSTNumber ?? "—")</code></td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-info me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="text-center text-muted py-4">No customers found. Add one!</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

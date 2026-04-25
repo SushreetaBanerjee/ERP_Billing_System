@@ -1,0 +1,199 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] — ERP Billing</title>
+
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <style>
+        /* ── Body ───────────────────────────────────────────────── */
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* ── Sidebar ─────────────────────────────────────────────── */
+        #sidebar {
+            width: 250px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #1a2a4a 0%, #243b6e 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+        }
+
+            #sidebar .sidebar-brand {
+                padding: 20px 16px;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+
+            #sidebar .nav-link {
+                color: rgba(255,255,255,0.75);
+                padding: 10px 20px;
+                border-radius: 6px;
+                margin: 2px 8px;
+                transition: all 0.2s;
+                font-size: 0.9rem;
+            }
+
+                #sidebar .nav-link:hover,
+                #sidebar .nav-link.active {
+                    color: #fff;
+                    background-color: rgba(255,255,255,0.15);
+                }
+
+                #sidebar .nav-link i {
+                    width: 22px;
+                }
+
+            #sidebar .sidebar-section-label {
+                font-size: 0.7rem;
+                text-transform: uppercase;
+                letter-spacing: 0.07em;
+                color: rgba(255,255,255,0.4);
+                padding: 8px 20px 4px;
+                margin-top: 8px;
+            }
+
+        /* ── Main Content ────────────────────────────────────────── */
+        #main-content {
+            margin-left: 250px;
+        }
+
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid #dee2e6;
+            padding: 12px 24px;
+        }
+
+        .page-content {
+            padding: 24px;
+        }
+
+        /* ── Status Badges ───────────────────────────────────────── */
+        .badge-paid {
+            background-color: #198754;
+            color: #fff;
+        }
+
+        .badge-unpaid {
+            background-color: #dc3545;
+            color: #fff;
+        }
+
+        .badge-partial {
+            background-color: #fd7e14;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ── Sidebar ────────────────────────────────────────────────────── -->
+    <nav id="sidebar">
+        <div class="sidebar-brand">
+            <h5 class="text-white mb-0">
+                <i class="bi bi-receipt-cutoff me-2"></i>ERP Billing
+            </h5>
+            <small class="text-white-50">Management System</small>
+        </div>
+
+        <ul class="nav flex-column mt-2">
+
+            <!-- Dashboard -->
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "active" : "")"
+                   asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
+                </a>
+            </li>
+
+            <!-- Masters Section -->
+            <li><div class="sidebar-section-label">Masters</div></li>
+
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customer" ? "active" : "")"
+                   asp-controller="Customer" asp-action="Index">
+                    <i class="bi bi-people me-2"></i>Customers
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")"
+                   asp-controller="Product" asp-action="Index">
+                    <i class="bi bi-box-seam me-2"></i>Products / Services
+                </a>
+            </li>
+
+            <!-- Billing Section -->
+            <li><div class="sidebar-section-label">Billing</div></li>
+
+            <li class="nav-item">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Invoice" ? "active" : "")"
+                   asp-controller="Invoice" asp-action="Index">
+                    <i class="bi bi-file-earmark-text me-2"></i>Invoices
+                </a>
+            </li>
+
+            <li class="nav-item">
+                <a class="nav-link" asp-controller="Invoice" asp-action="Create">
+                    <i class="bi bi-plus-circle me-2"></i>New Invoice
+                </a>
+            </li>
+
+        </ul>
+    </nav>
+
+    <!-- ── Main Content ───────────────────────────────────────────────── -->
+    <div id="main-content">
+
+        <!-- Top Bar -->
+        <div class="topbar d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 text-muted fw-semibold">@ViewData["Title"]</h6>
+            <span class="text-muted small">
+                <i class="bi bi-calendar3 me-1"></i>@DateTime.Today.ToString("dd MMM yyyy")
+            </span>
+        </div>
+
+        <!-- Page Content -->
+        <div class="page-content">
+
+            <!-- Global Success Alert -->
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Global Error Alert -->
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <!-- Page Body -->
+            @RenderBody()
+
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Page-specific scripts -->
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>
+
