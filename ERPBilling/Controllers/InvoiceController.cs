@@ -10,9 +10,11 @@ namespace ERPBilling.Controllers
     public class InvoiceController : Controller
     {
         private readonly IInvoiceService _invoiceService;
-        public InvoiceController(IInvoiceService invoiceService)
+        private readonly IInvoicePdfService _pdfService;
+        public InvoiceController(IInvoiceService invoiceService, IInvoicePdfService pdfService)
         {
             _invoiceService = invoiceService;
+            _pdfService = pdfService;
         }
         public async Task<IActionResult> Index(string? status)
         {
@@ -63,6 +65,19 @@ namespace ERPBilling.Controllers
             var invoice = await _invoiceService.CreateInvoiceAsync(vm);
             TempData["Success"] = $"Invoice {invoice.InvoiceNumber} created successfully.";
             return RedirectToAction(nameof(Details), new { id = invoice.Id });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> DownloadPdf(int id)
+        {
+            // Reuse the same fully-loaded invoice fetch used by Details()
+            var invoice = await _invoiceService.GetInvoiceWithDetailsAsync(id);
+            if (invoice == null) return NotFound();
+
+            byte[] pdfBytes = _pdfService.GenerateInvoicePdf(invoice);
+
+            string fileName = $"{invoice.InvoiceNumber}.pdf";
+            return File(pdfBytes, "application/pdf", fileName);
         }
     }
 }

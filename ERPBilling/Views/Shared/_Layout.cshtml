@@ -76,6 +76,32 @@
             padding: 24px;
         }
 
+        .card {
+            border: 1px solid var(--border-subtle);
+            box-shadow: 0 1px 3px rgba(16,24,40,0.04);
+        }
+
+        /* ── Buttons ─────────────────────────────────────────────── */
+        .btn-primary {
+            background-color: var(--brand-primary);
+            border-color: var(--brand-primary);
+        }
+
+            .btn-primary:hover {
+                background-color: var(--brand-primary-dark);
+                border-color: var(--brand-primary-dark);
+            }
+
+        .btn-outline-primary {
+            color: var(--brand-primary);
+            border-color: var(--brand-primary);
+        }
+
+            .btn-outline-primary:hover {
+                background-color: var(--brand-primary);
+                border-color: var(--brand-primary);
+            }
+
         /* ── Status Badges ───────────────────────────────────────── */
         .badge-paid {
             background-color: #198754;
@@ -90,6 +116,30 @@
         .badge-partial {
             background-color: #fd7e14;
             color: #fff;
+        }
+
+        .text-danger.field-validation-error {
+            font-size: 0.8rem;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .input-validation-error {
+            border-color: #DC2626 !important;
+            background-color: #FEF2F2;
+        }
+
+        /* ── Mobile Responsiveness for Invoice Line Items Table ─── */
+        @@media (max-width: 768px) {
+            #lineItemsTable th, #lineItemsTable td {
+                font-size: 0.75rem;
+                padding: 4px;
+            }
+
+            #lineItemsTable .form-control, #lineItemsTable .form-select {
+                font-size: 0.75rem;
+                padding: 4px 6px;
+            }
         }
     </style>
 </head>

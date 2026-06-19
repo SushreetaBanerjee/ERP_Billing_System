@@ -1,9 +1,11 @@
 ﻿using ERPBilling.Data;
 using ERPBilling.Repository;
 using ERPBilling.Repository.Interface;
+using ERPBilling.Service;
 using ERPBilling.Service.Interface;
 using ERPBilling.Services;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,8 +32,9 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
-
+builder.Services.AddScoped<IDashboardService, ERPBilling.Services.DashboardService >();
+builder.Services.AddScoped<IInvoicePdfService, InvoicePdfService>();
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 //builder.Services.AddEndpointsApiExplorer();
 //builder.Services.AddSwaggerGen();
